@@ -11,7 +11,7 @@
     -->
 
     <logger name="com.boot.sailing" level="Info"/>
-    <root level="Info">
+    <root level="Debug">
         <appender-ref ref="console"/>
     </root>
 </configuration>

@@ -1,15 +1,22 @@
 package com.boot.sailing.v2.service;
 
+import com.boot.sailing.comm.MyExceptionRuntime;
 import com.boot.sailing.v2.dao.MenuDaoV2;
 import com.boot.sailing.v2.vo.Coffee_menu;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 @Service
 @Log4j2
@@ -133,5 +140,33 @@ public class MenuSvcV2 {
         int int2 = menuDao.doUpdatePriceOne(chkList, strPrice);
 
         return int2;
+    }
+
+
+    //@Transactional(rollbackFor = Exception.class)
+    @Transactional
+    public int doUPdateInsert(List<String> chkList, String strPrice) throws RuntimeException {
+        log.info("=============================== \\\\\\\\\\\\\\\\\\ ===================");
+        int int1=0;
+        try {
+
+            int int2 = menuDao.doUpdatePriceOne(chkList, strPrice);
+
+            // Checked Exception 예외 발생 지점
+//        File file = new File("not_existring_file.txt");
+//        FileInputStream stream = new FileInputStream(file);
+
+            // Unchecked Exception
+//            int numerator = 1;
+//            int denominator = 0;
+//            int result = numerator / denominator;
+
+            int1 = menuDao.doInsertLogOne(chkList, strPrice);
+
+        } catch (Exception e) {
+            throw new MyExceptionRuntime(e.getMessage(), getClass().getName());
+        }
+
+        return int1;
     }
 }
