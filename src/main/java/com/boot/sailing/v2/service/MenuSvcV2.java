@@ -1,12 +1,19 @@
 package com.boot.sailing.v2.service;
 
+import com.boot.sailing.comm.BootLog;
 import com.boot.sailing.comm.MyExceptionRuntime;
 import com.boot.sailing.v2.dao.MenuDaoV2;
 import com.boot.sailing.v2.vo.Coffee_menu;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,6 +32,17 @@ public class MenuSvcV2 {
     @Autowired
     MenuDaoV2 menuDao;
 
+    @Autowired
+    BootLog bootLog;
+
+    @Autowired
+    PlatformTransactionManager transactionManager;
+
+    @Autowired
+    TransactionDefinition definition;
+
+    @Autowired
+    TransactionTemplate transactionTemplate;
 
     public MenuSvcV2() {
         log.info("=============== MenuSvc, 생성자 ==========================");
@@ -142,31 +160,103 @@ public class MenuSvcV2 {
         return int2;
     }
 
+    public int doUpdateInsert(List<String> chkList, String strPrice) throws RuntimeException  {
 
+        int rI=0;
+        try {
+
+            log.info("================== return  ===========================");
+            rI = transactionTemplate.execute(status -> {
+                int int2 = menuDao.doUpdatePriceOne(chkList, strPrice);
+                //status.setRollbackOnly();
+                return int2;
+            });
+
+            log.info("================== no return  ===========================");
+            transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+                @Override
+                protected void doInTransactionWithoutResult(TransactionStatus status) {
+                    int int1 = menuDao.doInsertLogOne(chkList, strPrice);
+                    //status.setRollbackOnly();
+                }
+            });
+
+        }catch (Exception e){
+            throw new MyExceptionRuntime(e.getMessage(), getClass().getName());
+        }finally {
+            log.info("===================== Finally =================");
+            TransactionStatus status3 = transactionManager.getTransaction(definition);
+            bootLog.doBootLog(getClass().getName());
+            transactionManager.commit(status3);
+        }
+
+        return rI;
+
+    }
+    /*
     //@Transactional(rollbackFor = Exception.class)
-    @Transactional
-    public int doUPdateInsert(List<String> chkList, String strPrice) throws RuntimeException {
-        log.info("=============================== \\\\\\\\\\\\\\\\\\ ===================");
+    public int doUpdateInsert(List<String> chkList, String strPrice) throws RuntimeException  {
+
+        int int1=0;
+        try {
+            TransactionStatus status = transactionManager.getTransaction(definition);
+            int int2 = menuDao.doUpdatePriceOne(chkList, strPrice);
+            transactionManager.rollback(status);
+
+            TransactionStatus status2 = transactionManager.getTransaction(definition);
+            int1 = menuDao.doInsertLogOne(chkList, strPrice);
+            transactionManager.rollback(status2);
+
+        }catch (Exception e){
+            throw new MyExceptionRuntime(e.getMessage(), getClass().getName());
+        }finally {
+            log.info("===================== Finally =================");
+            TransactionStatus status3 = transactionManager.getTransaction(definition);
+            bootlog.doBootLog(getClass().getName());
+            transactionManager.rollback(status3);
+        }
+
+        return int1;
+
+    }
+    */
+
+    /*
+    //@Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = Propagation.REQUIRED)
+    public int doUpdateInsert(List<String> chkList, String strPrice) throws RuntimeException  {
+
         int int1=0;
         try {
 
             int int2 = menuDao.doUpdatePriceOne(chkList, strPrice);
 
-            // Checked Exception 예외 발생 지점
-//        File file = new File("not_existring_file.txt");
-//        FileInputStream stream = new FileInputStream(file);
-
-            // Unchecked Exception
-//            int numerator = 1;
-//            int denominator = 0;
-//            int result = numerator / denominator;
-
             int1 = menuDao.doInsertLogOne(chkList, strPrice);
 
-        } catch (Exception e) {
+            int numerator = 1;
+            int denominator = 0;
+            int result = numerator / denominator;
+
+        }catch (Exception e){
             throw new MyExceptionRuntime(e.getMessage(), getClass().getName());
+        }finally {
+            log.info("===================== Finally =================");
+            bootlog.doBootLog(getClass().getName());
         }
 
         return int1;
+
+           // Checked Exception
+                File file = new File("not_existing_file.txt");
+                   FileInputStream stream
+                         = new FileInputStream(file);
+
+           /// Unchecked Exception , -> ArithmeticException
+            int numerator = 1;
+            int denominator = 0;
+            int result = numerator / denominator;
+
     }
+    */
+
 }

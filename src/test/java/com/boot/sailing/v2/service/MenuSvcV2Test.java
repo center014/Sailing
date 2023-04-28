@@ -22,13 +22,10 @@ class MenuSvcV2Test {
         List<String> chkList = new ArrayList<>();
         chkList.add("1");
         chkList.add("2");
-        String strPrice = "474747";
+        String strPrice = "5959";
 
-        try{
-            menuSvcV2.doUPdateInsert(chkList, strPrice);
-        }catch (Exception e){
-            System.out.println("====================== TEST ========================" + e.getMessage());
-        }
+        menuSvcV2.doUPdateInsert(chkList, strPrice);
+
 
     }
 }
